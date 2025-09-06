@@ -1,0 +1,8 @@
+digraph {
+	"live/prod/us-east-1/eks" ;
+	"live/prod/us-east-1/eks" -> "live/prod/us-east-1/networking";
+	"live/prod/us-east-1/networking" ;
+	"live/prod/us-east-1/rds" ;
+	"live/prod/us-east-1/rds" -> "live/prod/us-east-1/networking";
+	"live/prod/us-east-1/s3" ;
+}

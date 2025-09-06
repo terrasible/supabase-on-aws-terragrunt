@@ -1,0 +1,22 @@
+**/.terraform/**
+**/.terragrunt-cache/**
+
+# Security rule ignores with justifications:
+
+# AVD-AWS-0040: EKS cluster endpoint access from internet
+# Ignored because: Temporary configuration for development environment without VPN.
+# In production, this should be restricted to VPN or specific IP ranges.
+AVD-AWS-0040
+
+# AVD-AWS-0104: Security group rule allows unrestricted egress to any IP address
+# Ignored because: EKS node groups require internet access for pulling container images,
+# communicating with EKS control plane, and downloading packages. This is standard
+# behavior for managed node groups in the terraform-aws-modules/eks module.
+AVD-AWS-0104
+
+# AVD-AWS-0178: VPC does not have VPC Flow Logs enabled
+# Ignored because: VPC Flow Logs are implemented in our custom networking module,
+# but Trivy scans the cached terraform-aws-modules/vpc files which don't include
+# our custom flow logs configuration. Our implementation includes CloudWatch logging
+# for rejected traffic monitoring.
+AVD-AWS-0178

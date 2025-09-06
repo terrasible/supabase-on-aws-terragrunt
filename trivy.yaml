@@ -1,0 +1,24 @@
+scan:
+  skip-dirs:
+    - test/
+    - .terraform/
+    - .terragrunt-cache/
+    - .git/
+    - .infracost/
+    - cost-report/
+    - test/
+
+misconfiguration:
+  tf-exclude-downloaded-modules: true # Exclude third-party downloaded modules from scanning
+
+# Specify the ignore file for ignored checks or vulnerabilities
+ignoreFile: .trivyignore
+
+# Define the severities to focus on (UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL)
+severity:
+  - HIGH
+  - CRITICAL
+  - MEDIUM
+
+# Exit with code 1 if vulnerabilities or misconfigurations are found default to 0
+exit-code: 1
