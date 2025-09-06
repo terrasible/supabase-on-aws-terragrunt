@@ -3,6 +3,8 @@ name: PR Validation
 on:
   pull_request:
     branches: [master, main]
+  push:
+    branches: [master, main]
 
 permissions:
   contents: read
@@ -10,74 +12,71 @@ permissions:
   pull-requests: write
 
 env:
-  AWS_REGION: us-east-2
+  AWS_REGION: us-east-1
   AWS_ROLE_TO_ASSUME: "arn:aws:iam::637423497351:role/github-oidc-global-infra-role"
-  tg_version: v0.77.7
-  tf_version: 1.9.5
-  working_dir: live/us-east-2/dev/networking
+  TG_VERSION: v0.77.7
+  TF_VERSION: 1.9.5
 
 jobs:
-  # detect-changes:
-  #   name: Detect Changed Directories
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     directories: ${{ steps.filter.outputs.changes }}
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 0
-
-  #     - name: Find Changed Directories
-  #       id: filter
-  #       uses: dorny/paths-filter@v2
-  #       with:
-  #         list-files: json
-  #         filters: |
-  #           networking:
-  #             - 'us-east-2/dev/networking/**/*.hcl'
-  #             - modules/networking/**/*.tf
-  #           compute:
-  #             - 'us-east-2/dev/compute/**/*.hcl'
-  #             - 'modules/ecs/**/*.tf'
-  #           storage:
-  #             - 'us-east-2/dev/storage/**/*.hcl'
-  #             - modules/ecr/**/*.tf
-  #             - modules/mongodb/**/*.tf
-  #           secrets:
-  #             - 'us-east-2/dev/secrets/**/*.hcl'
-  #             - 'modules/ssm/**/*.tf'
-  #           backend:
-  #             - 'us-east-2/dev/backend/**/*.hcl'
-  #             - 'modules/iax-ec2-appbase/**/*.tf'
-  #           serving:
-  #             - 'us-east-2/dev/serving/**/*.hcl'
-  #             - 'modules/alb/**/*.tf'
-  #           global-iam:
-  #             - 'us-east-2/global/github-oidc/**/*.hcl'
-  #             - 'modules/github-oidc/**/*.tf'
-  #           global-storage:
-  #             - 'us-east-2/global/iax-s3-config-bucket/**/*.hcl'
-
-  plan:
-    name: Terragrunt Plan
-    #needs: detect-changes
-    #if: needs.detect-changes.outputs.directories != ''
+  pre-commit:
+    name: Pre-commit Checks
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout"
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: setup Terragrunt
-        uses: autero1/action-terragrunt@v3
         with:
-          terragrunt-version: ${{ env.tg_version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: setup Terraform
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "${{ env.tf_version }}"
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: ${{ env.TG_VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install TFLint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+
+  validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    needs: pre-commit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: ${{ env.TG_VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -86,100 +85,35 @@ jobs:
           role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
           role-session-name: GithubActionsSession
 
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - name: Run Terraform Validate
+        run: make validate
 
-      - name: Terragrunt Plan global
-        #if: steps.filter.outputs.global-iam == 'true' && steps.filter.outputs.global-storage == 'true'
-        run: terragrunt run-all plan --non-interactive --out-dir tmp/
-        env:
-          #TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
-          TG_WORKING_DIR: live/us-east-2/global
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Terragrunt Plan Networking
-        #if: steps.filter.outputs.networking == 'true'
-        run: terragrunt run-all plan --non-interactive --out-dir tmp/
-        env:
-          #TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
-          TG_WORKING_DIR: live/us-east-2/dev/networking
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terragrunt Plan Secrets
-        #if: steps.filter.outputs.secrets == 'true'
-        run: terragrunt run-all plan --non-interactive --out-dir tmp/
-        env:
-          TG_WORKING_DIR: live/us-east-2/dev/secrets
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: ${{ env.TG_VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Terragrunt Plan storage
-        #if: steps.filter.outputs.storage == 'true'
-        run: terragrunt run-all plan --non-interactive --out-dir tmp/
-        env:
-          TG_WORKING_DIR: live/us-east-2/dev/storage
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          role-session-name: GithubActionsSession
 
-      - name: Terragrunt Plan serving
-        #if: steps.filter.outputs.serving == 'true'
-        run: terragrunt run-all plan --non-interactive --out-dir tmp/
-        env:
-          TG_WORKING_DIR: live/us-east-2/dev/serving
-
-      - name: Terragrunt Plan backend
-        #if: steps.filter.outputs.backend == 'true'
-        run: terragrunt run-all plan --non-interactive --out-dir .
-        env:
-          TG_WORKING_DIR: live/us-east-2/dev/backend
-
-      # - name: Debug plan file location
-      #   run: |
-      #     echo "Plan file location: ${{ github.workspace }}/live/us-east-2/dev/backend/tfplan.tfplan"
-      #     echo "Current working directory: $(pwd)"
-      #     echo "List of files in the current directory:"
-      #     ls -l ${{ github.workspace }}/live/us-east-2/dev/backend/tfplan.tfplan
-
-      # - name: Post PR comment backend
-      #   uses: borchero/terraform-plan-comment@v2
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     planfile: ${{ github.workspace }}/live/us-east-2/dev/backend/tfplan.tfplan
-      #     terraform-cmd: terraform
-      #     #working-directory: live/us-east-2/dev/backend
-      #     header: "📝 Terraform Plan Backend"
-
-      # - name: Comment PR with Terraform Plan
-      #   uses: OP5dev/TF-via-PR@main
-      #   with:
-      #     token: ${{ secrets.PAT_GITHUB_TOKEN }} # Use a PAT instead of the default token
-      #     plan-file: ${{ github.workspace }}/live/us-east-2/dev/backend/tfplan.tfplan
-      #     # header: "📝 Terraform Plan Backend"
-      #     # comment-method: update
-      #     # comment-pr: always
-      #     # expand-diff: false
-      #     # expand-summary: false
-      #     # format: false
-      #     # hide-args: detailed-exitcode,parallelism,lock,out,var=
-      #     # label-pr: true
-      #     # plan-parity: false
-      #     # preserve-plan: false
-      #     # show-args: workspace
-      #     # tag-actor: always
-      #     # tool: terraform
-      #     # upload-plan: true
-      #     # validate: false
-      #     # arg-check: true
-      #     # arg-detailed-exitcode: true
-      #     # arg-diff: true
-      #     # arg-recursive: true
-
-      # - name: Set Terraform Plugin Cache Dir
-      #   run: echo "TF_PLUGIN_CACHE_DIR=${{ github.workspace }}/.terraform.d/plugin-cache" >> $GITHUB_ENV
-
-      # - name: Create Terraform Plugin Cache Dir
-      #   run: mkdir -p $TF_PLUGIN_CACHE_DIR
-
-      # - name: Terraform Plugin Cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ${{ env.TF_PLUGIN_CACHE_DIR }}
-      #     key: ${{ runner.os }}-terraform-plugin-cache-${{ hashFiles('live/us-east-2/dev/networking/.terraform.lock.hcl') }}
+      - name: Run Terraform Plan
+        run: make plan
