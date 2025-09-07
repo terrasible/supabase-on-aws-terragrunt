@@ -17,8 +17,6 @@ env:
 jobs:
   format:
     name: Terraform Format Check
-  format:
-    name: Terraform Format Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,22 +26,7 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v3
-        with:
-          terragrunt-version: ${{ env.TG_VERSION }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Terraform Format Check
-        run: make fmt TF_PATH=${{ env.TF_PATH }}
-
-  lint:
-    name: TFLint
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Setup Terragrunt
@@ -59,7 +42,6 @@ jobs:
     name: TFLint
     runs-on: ubuntu-latest
     needs: format
-    needs: format
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,21 +53,7 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup TFLint
-        uses: terraform-linters/setup-tflint@v5
         with:
-          tflint_version: v0.52.0
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v3
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Setup Terragrunt
@@ -93,52 +61,6 @@ jobs:
         with:
           terragrunt-version: ${{ env.TG_VERSION }}
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Initialize TFLint
-        run: tflint --init --config=.tflint.hcl
-
-      - name: Run TFLint
-        run: make lint TF_PATH=${{ env.TF_PATH }}
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: format
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.33.0
-        with:
-          scan-type: "config"
-          scan-ref: "."
-          trivy-config: "trivy.yaml"
-          format: "sarif"
-          output: "trivy-results.sarif"
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: "trivy-results.sarif"
-
-  # docs:
-  #   name: Documentation
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-
-  #     - name: Render terraform docs inside the README.md and push changes back to PR branch
-  #       uses: terraform-docs/gh-actions@v1.4.1
-  #       with:
-  #         working-dir: .
-  #         output-file: README.md
-  #         output-method: inject
-  #         git-push: "true"
 
       - name: Initialize TFLint
         run: tflint --init --config=.tflint.hcl
@@ -189,7 +111,6 @@ jobs:
   validate: # Syntax check
     name: Terraform Validate
     runs-on: ubuntu-latest
-    needs: [lint, security]
     needs: [lint, security]
     steps:
       - uses: actions/checkout@v4
