@@ -129,7 +129,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - run: make validate TF_PATH=${{ env.TF_PATH }}
+      - run: make validate TF_PATH=$(which terraform)
 
   plan: # Preview changes
     name: Terraform Plan
@@ -148,4 +148,4 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - run: make plan TF_PATH=${{ env.TF_PATH }} # Generate plans
+      - run: make plan TF_PATH=$(which terraform) # Generate plans
