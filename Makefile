@@ -34,13 +34,9 @@ validate:
 	terragrunt validate -all $(TG_FLAGS)
 
 lint:
-<<<<<<< HEAD
-	tflint --config=.tflint.hcl --recursive .
-=======
 	tflint --config=.tflint.hcl --chdir=modules/eks
 	tflint --config=.tflint.hcl --chdir=modules/networking
 	tflint --config=.tflint.hcl --chdir=modules/rds
->>>>>>> a0bf5d3 (fix: update PR  validation workflowv v3)
 
 plan:
 	terragrunt plan -all $(TG_FLAGS)
