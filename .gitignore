@@ -47,3 +47,7 @@ terraform.rc
 # macOS system files
 .DS_Store
 **/.DS_Store
+../eks/.terraform.lock.hcl
+../networking/.terraform.lock.hcl
+../rds/.terraform.lock.hcl
+.terraform.lock.hcl
