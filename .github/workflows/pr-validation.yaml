@@ -63,7 +63,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Initialize TFLint
-        run: tflint --init --config=.tflint.hcl
+        run: |
+          tflint --init --config=.tflint.hcl
+          tflint --version
+          ls -la ~/.tflint.d/plugins/ || echo "No plugins directory found"
 
       - name: Run TFLint
         run: make lint TF_PATH=${{ env.TF_PATH }}
