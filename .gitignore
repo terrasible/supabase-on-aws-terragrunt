@@ -36,7 +36,14 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-.terragrunt-cache/*
-.infracost/*
-.infracost/.terragrunt-cache/*
+# Terragrunt cache directories (recursive)
+**/.terragrunt-cache/
+.terragrunt-cache/
+
+# Infracost directories
+.infracost/
+**/.infracost/
+
+# macOS system files
 .DS_Store
+**/.DS_Store
