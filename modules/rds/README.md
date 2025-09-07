@@ -58,5 +58,12 @@
 | <a name="output_db_endpoint"></a> [db\_endpoint](#output\_db\_endpoint) | ################################## Outputs ################################## |
 | <a name="output_db_instance_address"></a> [db\_instance\_address](#output\_db\_instance\_address) | n/a |
 | <a name="output_db_instance_arn"></a> [db\_instance\_arn](#output\_db\_instance\_arn) | n/a |
+| <a name="output_db_instance_port"></a> [db\_instance\_port](#output\_db\_instance\_port) | Database instance port |
+| <a name="output_db_name"></a> [db\_name](#output\_db\_name) | The name of the database |
+| <a name="output_db_password"></a> [db\_password](#output\_db\_password) | Database password |
 | <a name="output_db_password_parameter"></a> [db\_password\_parameter](#output\_db\_password\_parameter) | n/a |
+| <a name="output_db_secretmanager_arn"></a> [db\_secretmanager\_arn](#output\_db\_secretmanager\_arn) | Database secret manager ARN |
+| <a name="output_db_security_group_id"></a> [db\_security\_group\_id](#output\_db\_security\_group\_id) | Database security group ID |
+| <a name="output_db_username"></a> [db\_username](#output\_db\_username) | Database username |
+| <a name="output_rds_secretmanager_arn"></a> [rds\_secretmanager\_arn](#output\_rds\_secretmanager\_arn) | RDS Secret manager secret ARN |
 <!-- END_TF_DOCS -->

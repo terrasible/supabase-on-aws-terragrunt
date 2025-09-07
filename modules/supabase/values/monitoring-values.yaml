@@ -1,0 +1,65 @@
+# Monitoring Minimal Production Values
+# Essential Grafana configuration for Supabase monitoring
+
+# Prometheus - use defaults, only specify storage
+prometheus:
+  enabled: true
+  prometheusSpec:
+    retention: "24h"
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "gp3-csi" # CSI-backed StorageClass
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: "10Gi"
+    # Topology spread to avoid all pods in the same AZ
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: prometheus
+            topologyKey: "topology.kubernetes.io/zone"
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: "topology.kubernetes.io/zone"
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: prometheus
+
+# Grafana - minimal config for dashboard access
+grafana:
+  enabled: true
+  adminPassword: "${grafana_admin_password}"
+  persistence:
+    enabled: false # Use defaults for config storage
+  service:
+    type: "ClusterIP"
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-staging"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - grafana.${domain_name}
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.${domain_name}
+
+# Disable other components - use defaults
+alertmanager:
+  enabled: false
+
+nodeExporter:
+  enabled: false
+
+kubeStateMetrics:
+  enabled: true
+
+prometheusOperator:
+  enabled: true

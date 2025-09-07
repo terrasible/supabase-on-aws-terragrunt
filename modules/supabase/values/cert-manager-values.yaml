@@ -1,0 +1,21 @@
+# Cert-Manager Minimal Production Value
+# High availability
+replicaCount: 2
+
+# Production resource limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Disable startup API check job that's causing deployment failures
+startupapicheck:
+  enabled: false
+
+# Pod disruption budget for availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

@@ -1,0 +1,3 @@
+[submodule "charts/upstream-supabase"]
+	path = charts/upstream-supabase
+	url = https://github.com/supabase-community/supabase-kubernetes.git

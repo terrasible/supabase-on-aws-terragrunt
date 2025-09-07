@@ -9,7 +9,8 @@ TG_FLAGS = --backend-bootstrap \
 		   --provider-cache \
 		   --parallelism $(PARALLELISM) \
 		   --non-interactive \
-		   --tf-path $(TF_PATH)
+		   --tf-path $(TF_PATH) \
+		   --queue-exclude-dir live/prod/us-east-1/supabase
 
 .PHONY: cost clean init validate plan apply destroy destroy-plan fmt lint help
 
@@ -24,6 +25,7 @@ clean:
 
 init:
 	terragrunt init -all $(TG_FLAGS)
+	git submodule update --init --recursive
 
 fmt:
 	terraform fmt -recursive .
@@ -49,6 +51,15 @@ destroy:
 
 destroy-plan:
 	terragrunt destroy -plan -all $(TG_FLAGS)
+
+plan-supabase:
+	terragrunt plan -all --backend-bootstrap --working-dir live/prod/us-east-1/supabase --provider-cache --parallelism $(PARALLELISM) \
+		   --non-interactive \
+		   --tf-path $(TF_PATH)
+apply-supabase:
+	terragrunt apply -all --backend-bootstrap --working-dir live/prod/us-east-1/supabase --provider-cache --parallelism $(PARALLELISM) \
+		   --non-interactive \
+		   --tf-path $(TF_PATH)
 
 help:
 	@echo "Available targets:"

@@ -1,0 +1,34 @@
+# NGINX Ingress Controller Minimal Production Values
+# Essential AWS NLB configuration for HTTPS traffic
+
+controller:
+  # High availability
+  replicaCount: 1
+  minAvailable: 1
+
+  # Production resource limits
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  # AWS Network Load Balancer service
+  service:
+    enabled: true
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+      service.beta.kubernetes.io/aws-load-balancer-security-groups: "${supabase_security_group_id}"
+    externalTrafficPolicy: Local
+
+  # Enable SSL passthrough for cert-manager
+  config:
+    ssl-protocols: "TLSv1.2 TLSv1.3"
+    use-forwarded-headers: "true"
+    compute-full-forwarded-for: "true"
+    use-proxy-protocol: "false"

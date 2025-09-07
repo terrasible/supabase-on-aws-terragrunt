@@ -1,0 +1,191 @@
+# Supabase Templated Values File
+# Uses Terraform variables and Kubernetes secrets for configuration
+# Database Configuration (External RDS)
+db:
+  enabled: false # Using external RDS database
+  image:
+    tag: "15.8.1.060"
+
+# Studio Configuration
+studio:
+  enabled: true
+  image:
+    tag: "2025.06.30-sha-6f5982d"
+  environment:
+    STUDIO_DEFAULT_ORGANIZATION: "terrasible"
+    STUDIO_DEFAULT_PROJECT: "terrasible"
+    SUPABASE_PUBLIC_URL: "http://localhost:8080"
+    SUPABASE_URL: "http://supabase-supabase-kong:8000"
+    STUDIO_PG_META_URL: "http://supabase-supabase-meta:8080"
+    DB_HOST: "${db_host}"
+    DB_PORT: "${db_port}"
+    DB_USER: "postgres"
+    DB_SSL: "disable"
+    PGSSLMODE: "disable"
+
+# Auth Configuration
+auth:
+  image:
+    tag: "v2.177.0"
+  environment:
+    DB_HOST: "${db_host}"
+    DB_PORT: "${db_port}"
+    DB_USER: "postgres"
+    DB_SSL: "disable"
+    PGSSLMODE: "disable"
+    GOTRUE_EXTERNAL_EMAIL_ENABLED: "false"
+    GOTRUE_MAILER_AUTOCONFIRM: "false"
+    GOTRUE_SMTP_ADMIN_EMAIL: "admin@example.com"
+    GOTRUE_SMTP_HOST: "localhost"
+    GOTRUE_SMTP_PORT: "587"
+    GOTRUE_SMTP_SENDER_NAME: "Supabase"
+
+# Rest Configuration
+rest:
+  image:
+    tag: "v12.2.12"
+  environment:
+    DB_SSL: "disable"
+
+# Storage Configuration
+storage:
+  image:
+    tag: "v1.25.7"
+  environment:
+    DB_HOST: "${db_host}"
+    DB_PORT: "${db_port}"
+    DB_USER: "postgres"
+    DB_SSL: "disable"
+    PGSSLMODE: "disable"
+    STORAGE_BACKEND: "s3"
+    GLOBAL_S3_BUCKET: "${s3_bucket_name}"
+    REGION: "${region}"
+    GLOBAL_S3_ENDPOINT: "${s3_endpoint}"
+    AWS_ACCESS_KEY_ID: "${s3_access_key_id}"
+    AWS_SECRET_ACCESS_KEY: "${s3_secret_key}"
+    FILE_STORAGE_BACKEND_PATH: "/var/lib/storage"
+    PGOPTIONS: "-c search_path=storage,public"
+    FILE_SIZE_LIMIT: "52428800"
+    TENANT_ID: "stub"
+  persistence:
+    storageClassName: "gp2"
+
+# Meta Configuration
+meta:
+  image:
+    tag: "v0.91.0"
+  environment:
+    DB_HOST: "${db_host}"
+    DB_PORT: "${db_port}"
+    DB_USER: "postgres"
+    DB_SSL: "disable"
+
+# Realtime Configuration
+realtime:
+  enabled: false
+  image:
+    tag: "v2.34.47"
+
+# Analytics Configuration
+analytics:
+  enabled: false
+  image:
+    tag: "1.14.2"
+
+# Functions Configuration
+functions:
+  enabled: false
+  image:
+    tag: "v1.69.6"
+
+# Vector Configuration
+vector:
+  enabled: false
+  image:
+    tag: "0.28.1-alpine"
+
+# Imgproxy Configuration
+imgproxy:
+  image:
+    tag: "v3.8.0"
+  persistence:
+    storageClassName: "gp2"
+
+# Kong Configuration
+kong:
+  image:
+    tag: "2.8.1"
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    hosts:
+      - paths:
+          - path: /
+            pathType: Prefix
+
+# Secrets Configuration - References to Kubernetes Secret
+secret:
+  # Database secrets
+  db:
+    username:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: db_username
+    password:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: db_password
+    database:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: db_database
+
+  # JWT secrets
+  jwt:
+    secret:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: jwt_secret
+    anonKey:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: jwt_anon_key
+    serviceKey:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: jwt_service_key
+
+  # SMTP secrets
+  smtp:
+    username:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: smtp_username
+    password:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: smtp_password
+
+  # Dashboard secrets
+  dashboard:
+    username:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: dashboard_username
+    password:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: dashboard_password
+
+  # Analytics secrets
+  analytics:
+    apiKey:
+      secretKeyRef:
+        name: supabase-thanos-secret
+        key: analytics_api_key
+
+# Minio Configuration (disabled for S3)
+minio:
+  enabled: false

@@ -38,7 +38,7 @@ module "eks" {
   iam_role_name        = "${var.name_prefix}-${var.env}-${random_id.eks_suffix.hex}-iam-role"
   region               = var.region
 
-  # Restrict API access to current IP
+  # Allow API access from current IP and NLB traffic
   security_group_additional_rules = {
     ingress_https_api = {
       description = "Allow HTTPS API access from your IP only"
@@ -47,6 +47,15 @@ module "eks" {
       to_port     = 443
       type        = "ingress"
       cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
+    }
+    # Allow NLB health checks and traffic from within VPC
+    ingress_nlb_traffic = {
+      description = "Allow NLB traffic from VPC for global access"
+      protocol    = "tcp"
+      from_port   = 0
+      to_port     = 65535
+      type        = "ingress"
+      cidr_blocks = [var.vpc_cidr]
     }
   }
 
@@ -60,6 +69,10 @@ module "eks" {
     eks-pod-identity-agent = { most_recent = true, before_compute = true }
     kube-proxy             = { most_recent = true }
     vpc-cni                = { most_recent = true, before_compute = true }
+    aws-ebs-csi-driver = {
+      most_recent              = true
+      service_account_role_arn = aws_iam_role.ebs_csi_irsa_role.arn
+    } #For deploying Prometheus as statefulset
   }
 
   # Managed Node Group for Supabase workloads
@@ -72,6 +85,10 @@ module "eks" {
       max_size       = 10
       desired_size   = 3
       ami_type       = "AL2023_ARM_64_STANDARD"
+
+      # Node group policies (EBS CSI driver uses IRSA instead)
+      iam_role_additional_policies = {}
+
       labels = {
         workload = "supabase"
       }
@@ -80,4 +97,35 @@ module "eks" {
   }
 
   tags = var.tags
+}
+
+# IAM role for EBS CSI driver
+resource "aws_iam_role" "ebs_csi_irsa_role" {
+  name = "${var.name_prefix}-${var.env}-ebs-csi-driver"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = module.eks.oidc_provider_arn
+        }
+        Condition = {
+          StringEquals = {
+            "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+            "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+  role       = aws_iam_role.ebs_csi_irsa_role.name
 }
