@@ -65,6 +65,7 @@ jobs:
       - name: Initialize TFLint
         run: |
           tflint --init --config=.tflint.hcl
+          tflint --install-plugin aws
           tflint --version
           ls -la ~/.tflint.d/plugins/ || echo "No plugins directory found"
 

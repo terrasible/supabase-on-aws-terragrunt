@@ -34,9 +34,9 @@ validate:
 	terragrunt validate -all $(TG_FLAGS)
 
 lint:
-	tflint --config=../../.tflint.hcl --chdir=modules/eks
-	tflint --config=../../.tflint.hcl --chdir=modules/networking
-	tflint --config=../../.tflint.hcl --chdir=modules/rds
+	(cd modules/eks && tflint --config=../../.tflint.hcl .)
+	(cd modules/networking && tflint --config=../../.tflint.hcl .)
+	(cd modules/rds && tflint --config=../../.tflint.hcl .)
 
 plan:
 	terragrunt plan -all $(TG_FLAGS)
