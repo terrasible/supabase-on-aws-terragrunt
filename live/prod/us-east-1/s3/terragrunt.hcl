@@ -19,7 +19,7 @@ locals {
 # Terragrunt will copy the Terraform configurations specified by the source parameter, along with any files in the
 # working directory, into a temporary folder, and execute your Terraform commands in that folder.
 terraform {
-  source = "git@github.com:terraform-aws-modules/terraform-aws-s3-bucket.git?ref=v5.7.0"
+  source = "git::https://github.com/terraform-aws-modules/terraform-aws-s3-bucket.git?ref=v5.7.0"
 }
 
 # Include all settings from the root terragrunt.hcl file
