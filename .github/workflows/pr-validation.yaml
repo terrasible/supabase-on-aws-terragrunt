@@ -115,7 +115,7 @@ jobs:
   validate: # Syntax check
     name: Terraform Validate
     runs-on: ubuntu-latest
-    needs: [lint, security]
+    needs: [security]
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
