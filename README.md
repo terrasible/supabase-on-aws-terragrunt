@@ -22,6 +22,11 @@ pip install pre-commit && pre-commit install
 
 # Configure AWS
 aws configure
+
+# OR use environment variables
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_DEFAULT_REGION="your-region"
 ```
 
 ## 🚀 Quick Start
@@ -48,7 +53,7 @@ Update `live/prod/account.hcl` with your AWS account details:
 ```hcl
 locals {
   account_name       = "prod"
-  account_id         = "XXXXXXXXX"  # Your AWS Account ID
+  account_id         = "XXXXXXXXX"               # Your AWS Account ID
   remote_bucket_name = "supabase-infra-backend"  # S3 bucket for Terraform state
 }
 ```
@@ -61,15 +66,10 @@ locals {
 ## 🛠️ Available Commands
 
 ```bash
-# Infrastructure
-make init validate plan apply destroy
-make plan-supabase apply-supabase  # Supabase only
-
-# Maintenance
-make fmt lint clean cost
-
-# Configuration overrides
-make plan TF_PATH=/usr/local/bin/terraform
+make init validate plan apply destroy # Infrastructure
+make plan-supabase apply-supabase  # Supabase
+make fmt lint clean cost # Maintenance
+make plan TF_PATH=/usr/local/bin/terraform # Configuration overrides
 make apply PARALLELISM=2
 ```
 
@@ -98,18 +98,20 @@ Edit configuration files in `live/prod/us-east-1/*/terragrunt.hcl` for:
 ## 🧪 Testing & Monitoring
 
 ```bash
-./scripts/smoke-test.sh                    # Test endpoints
+./scripts/smoke-test.sh                       # Test endpoints
+
 make cost && open cost-report/infracost.html  # Cost analysis
 ```
+
+### EKS Cluster Management
+Use Kubernetes IDE: [Freelens](https://freelensapp.github.io/) for managing EKS cluster via logs, metrics and cluster state
 
 ## 🚨 Troubleshooting
 
 ```bash
-# State lock errors
-terragrunt force-unlock <lock-id>
+terragrunt force-unlock <lock-id> # State lock errors
 
-# Complete cleanup
-make destroy-plan && make destroy && make clean
+make destroy-plan && make destroy && make clean # Complete cleanup
 ```
 
 ## 🔒 Security
