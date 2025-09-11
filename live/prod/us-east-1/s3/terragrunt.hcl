@@ -13,6 +13,7 @@ locals {
   name_prefix                             = local.env_vars.locals.name_prefix
   region                                  = local.region_vars.locals.region
   zones                                   = local.region_vars.locals.zones
+  account_id                              = local.account_vars.locals.account_id
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
 }
 
@@ -29,7 +30,7 @@ include "root" {
 
 # These are the variables we have to pass in to use the module specified in the terragrunt configuration above
 inputs = {
-  bucket_name = "${local.name_prefix}-storage-${local.env}"
+  bucket_prefix = "${local.name_prefix}-storage-${local.env}"
 
   acl           = "private"
   force_destroy = true
@@ -56,6 +57,9 @@ inputs = {
       }
     }
   }
+
+  # IAM Policy will be configured separately after the Supabase role is created
+  attach_policy = false
 
   tags = {
     component = "s3"

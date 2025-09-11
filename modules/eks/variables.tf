@@ -28,3 +28,8 @@ variable "region" {
   description = "AWS region where the EKS cluster will be created"
   type        = string
 }
+
+variable "vpc_cidr" {
+  description = "VPC CIDR block for security group rules"
+  type        = string
+}

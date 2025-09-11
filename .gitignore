@@ -51,3 +51,6 @@ terraform.rc
 ../networking/.terraform.lock.hcl
 ../rds/.terraform.lock.hcl
 .terraform.lock.hcl
+modules/supabase/secrets.tf.disabled
+modules/supabase/values/supabase-hardcoded-secrets.yaml
+node_modules

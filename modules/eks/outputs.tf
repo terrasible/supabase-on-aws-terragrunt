@@ -19,6 +19,11 @@ output "cluster_endpoint" {
   value       = module.eks.cluster_endpoint
 }
 
+output "cluster_ca_certificate" {
+  description = "Base64 encoded certificate data required to communicate with the cluster"
+  value       = module.eks.cluster_certificate_authority_data
+}
+
 # Security outputs
 output "cluster_security_group_id" {
   description = "Cluster security group that was created by Amazon EKS for the cluster"
@@ -64,10 +69,10 @@ output "cloudwatch_log_group_arn" {
 }
 
 # Cluster addons
-output "cluster_addons" {
-  description = "Map of attribute maps for all EKS cluster addons enabled"
-  value       = module.eks.cluster_addons
-}
+# output "cluster_addons" {
+#   description = "Map of attribute maps for all EKS cluster addons enabled"
+#   value       = module.eks.cluster_addons
+# }
 
 # Access entries
 output "access_entries" {

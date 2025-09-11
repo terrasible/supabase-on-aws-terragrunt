@@ -27,6 +27,7 @@ dependency "networking" {
   mock_outputs = {
     vpc_id              = "vpc-hgygjj"
     private_subnets_ids = ["subnet-hhhh", "subnet-05b96e1d14234e245"]
+    vpc_cidr            = "10.0.0.0/16"
   }
   mock_outputs_allowed_terraform_commands = local.mock_outputs_allowed_terraform_commands
 }
@@ -44,6 +45,7 @@ inputs = {
 
   vpc_id          = dependency.networking.outputs.vpc_id
   private_subnets = dependency.networking.outputs.private_subnets_ids
+  vpc_cidr        = dependency.networking.outputs.vpc_cidr_block
 
   tags = {
     component = "networking"

@@ -68,7 +68,7 @@ remote_state {
     path      = "backend.tf"
     if_exists = "overwrite_terragrunt"
   }
-
+  # TODO : Add account_id while creating backend bucket to make it unique
   config = {
     region         = local.region
     bucket         = "${local.remote_bucket_name}-${local.account_name}-${local.region}"
