@@ -2,6 +2,6 @@
 # root.hcl configuration.
 locals {
   account_name       = "prod"
-  account_id         = "688567272993"
+  account_id         = "XXXXXXXXX"
   remote_bucket_name = "supabase-infra-backend"
 }

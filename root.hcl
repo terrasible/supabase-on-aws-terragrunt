@@ -35,8 +35,6 @@ terraform {
   extra_arguments "optimization" {
     commands = ["init", "apply", "plan", "destroy"]
     arguments = [
-      //"-parallelism=4",
-      //"-refresh=true",
       "-no-color"
     ]
   }
@@ -71,9 +69,9 @@ remote_state {
   # TODO : Add account_id while creating backend bucket to make it unique
   config = {
     region         = local.region
-    bucket         = "${local.remote_bucket_name}-${local.account_name}-${local.region}"
+    bucket         = "${local.remote_bucket_name}-${local.account_name}-${local.account_id}-${local.region}"
     key            = "${local.account_name}/${path_relative_to_include()}/terraform.tfstate"
-    dynamodb_table = "tf-locks-${local.account_name}-${local.region}"
+    dynamodb_table = "tf-locks-${local.account_name}-${local.account_id}-${local.region}"
     encrypt        = true
     acl            = "private"
   }
