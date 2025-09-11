@@ -47,13 +47,13 @@ dependency "eks" {
 dependency "rds" {
   config_path = "${get_parent_terragrunt_dir()}/live/${local.env}/${local.region}/rds"
   mock_outputs = {
-    db_instance_address                = "mock-db.cluster-xyz.us-east-1.rds.amazonaws.com"
-    db_instance_master_user_secret_arn = "arn:aws:rds:us-east-1:123456789012:pwd:mock-db-pwd"
-    dashboard_username                 = "mock-db-name"
-    db_instance_port                   = 5432
-    db_name                            = "mock-db-name"
-    db_username                        = "mock-username"
-    db_password_parameter              = "mock-password-123" #gitleaks:allow
+    db_instance_address   = "mock-db.cluster-xyz.us-east-1.rds.amazonaws.com"
+    rds_secretmanager_arn = "arn:aws:rds:us-east-1:123456789012:pwd:mock-db-pwd"
+    dashboard_username    = "mock-db-name"
+    db_instance_port      = 5432
+    db_name               = "mock-db-name"
+    db_username           = "mock-username"
+    db_password_parameter = "mock-password-123" #gitleaks:allow
 
   }
   mock_outputs_allowed_terraform_commands = local.mock_outputs_allowed_terraform_commands
