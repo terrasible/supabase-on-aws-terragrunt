@@ -17,16 +17,12 @@ Production-ready Supabase deployment on AWS EKS using Terraform and Terragrunt. 
 
 ```bash
 # Install required tools (macOS)
-brew install terraform terragrunt awscli kubectl helm
-
-# Optional development tools
-brew install tflint infracost
+brew install terraform terragrunt awscli kubectl helm tflint infracost
 pip install pre-commit && pre-commit install
 
 # Configure AWS
 aws configure
 ```
-
 
 ## 🚀 Quick Start
 
@@ -34,19 +30,33 @@ aws configure
 # 1. Clone and setup
 git clone <repository-url>
 cd supabase-on-aws-terragrunt
-git submodule update --init --recursive
+make init
 
-# 2. Configure environment
-# Edit live/prod/account.hcl with your AWS account ID and bucket name
-# Terragrunt auto-creates state bucket and DynamoDB table
 
 # 3. Deploy infrastructure
-make plan    # Review changes
-make apply   # Deploy everything
+make plan
+make apply
 
-# Or deploy Supabase only
+# And deploy Supabase
 make plan-supabase && make apply-supabase
 ```
+
+## ⚙️ Account Configuration
+
+Update `live/prod/account.hcl` with your AWS account details:
+
+```hcl
+locals {
+  account_name       = "prod"
+  account_id         = "XXXXXXXXX"  # Your AWS Account ID
+  remote_bucket_name = "supabase-infra-backend"  # S3 bucket for Terraform state
+}
+```
+
+**Requirements:**
+- AWS Account ID must have permissions to create EKS, RDS, VPC, and S3 resources
+- You can customize the bucket name for storing infrastructure state
+- Terragrunt will auto-create the state bucket and DynamoDB table
 
 ## 🛠️ Available Commands
 
